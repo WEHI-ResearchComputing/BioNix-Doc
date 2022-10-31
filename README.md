@@ -1,4 +1,4 @@
-# WEHI-Workflow-Onboarding
+# WEHI-BioNix-Guide
 This repo will contain introductory documentation to workflow management system (WMS) used at WEHI, namely <a href="https://github.com/PapenfussLab/bionix">BioNix</a> and <a href="https://snakemake.readthedocs.io/en/stable/">Snakemake</a>. Both are tools that are able to create highly reproducible pipelines in bioinformatics and can be executed via HPC, there are also other WMS such as <a href="https://www.nextflow.io/">Nextflow</a> and <a href="https://galaxyproject.org/">Galaxy</a>.
 
 Suggestions and useful resources to BioNix and Snakemake will be detailed below respectively, particularly dedicated for concurrent and future WEHI student interns to gain understanding of the workflows or to get a head start on working with either workflows for their project.
@@ -29,7 +29,14 @@ Note: However, you need to load rc-tools everytime and Nix is only able to be ru
 The example in <a href="https://github.com/PapenfussLab/bionix">BioNix</a>'s repo is a good way to run your first workflow.
 
 ### Configuration Settings
-
+For the BioNix project, we would like to utilise the nix flakes, this allows us to create builds in a strictly determined environment and create same outputs on different machines. Once you have installed Nix, add the following line to ``/etc/nix/nix.conf``
+```
+experimental-features = nix-command flakes
+```
+To check if the installation is successful, input the following command line
+```
+$ nix flake --help
+```
 
 ## Snakemake
 <a href="https://snakemake.readthedocs.io/en/stable/">Snakemake</a> is another popular tool for reproducible and scalable data analyses, where its workflows are more easily readable for users familiar with Python since Snakemake is a Python based language. There are many tutorials and documentation on Snakemake's website to learn the language.
@@ -63,4 +70,155 @@ nix run 'github:nixos/nixpkgs/release-22.05#snakemake' -- --help
 ### Learning Snakemake
 You should start with going through this doc: https://snakemake.readthedocs.io/en/stable/tutorial/basics.html
 
-### Starter Examples
+
+# Kickstart to Bionix
+From this section onwards, the focus will be placed on BioNix, where I will detail the vital topics to be able to start wrapping software tools in BioNix. On top of that, please refer to the official manual, code from nixpkgs GitHub repository or available written guides for technical details and explanations for a clearer understanding where necessary.
+
+## Set Up prior to Development
+Before coding in Nix, you would first need an editor. Of course, choosing editors always comes down to preference, any popular editors out there may be sufficient i.e. Vim. Personally, I use VS Code as my editor because of the available nix extension like code formatter. Other than that, I find it useful that viewing derivation log files or content of the outputs is easy in VS Code, for example clicking the `/nix/store/example-output.drv` opens a tab to view the .drv derivation file, or `/nix/store/example-output-directory` can open the directory in your explorer, this comes in handy when you're debugging or checking your file outputs.
+
+## nix build
+When you want to test your workflow, the ``nix build`` command should be utilised, where a symlink to the result will be created in the directory called ``result`` by default if the build is successful (no errors in your build). Usually, if no paths are specified, ``nix build`` will use default.nix in the current directory, i.e. when running ``$ nix build`` in the CLI. Hence, when you want to write a workflow, it should be orchestrated in a default.nix file at the top level of that directory. Additionally, you can run ``nix build -o foo-output-name`` to give the output directory a specific name rather than "result".
+
+## default.nix
+### Importing BioNix
+Usually, you would start a workflow with ``{ bionix ? import <bionix> { } }:`` This would ensure that bionix is imported, otherwise if it's not already imported it would default to `import <bionix> {}`. If you receive some errors, it could be that calling the bionix package is missing in the flake.nix 
+
+### With expression
+The `With` expression includes symbols into the scope of the inner expression. If you're using any function or tools from BioNix multiple times, you may include `with bionix;`, otherwise you need to write `bionix.function` multiple times in your code. It behaves like `from module import *` from Python.
+
+### Fetching files
+Let's say you need to copy a file that is available online for your code, a direct way is to use `fetchurl`, which will require arguments of a URL and a hash. In Nix, you can define a variable `foo` for the file you are copying, for example:
+```
+foo = fetchurl {
+    url = "http://www.example.org/hello-1.0.tar.gz";
+    sha256 = "0v6r3wwnsk5pdjr188nip3pjgn1jrn5pc5ajpcfy6had6b3v4dwm";
+}
+``` 
+Simply paste the url to the file as the value to the attribute `url`. To obtain the hash, I usually use `nix-prefetch-url --type sha256 yourUrlHere` to get the hash, generally sha256 is recommended. Note that the utilisation of hash here ensures consistency and specific versions of your file sources that are being fetched.  
+You may check this <a href=https://ryantm.github.io/nixpkgs/builders/fetchers/>page</a> or the manual out for alternate fetchers examples.
+
+### Fetching file of specific types in BioNix
+There are some specific file types that are common in bioninformatics. There already are functions in Bionix to check and fetch the specific file types, and they should be used when fetching files of those types, refer to <a href=https://github.com/PapenfussLab/bionix/blob/81cfa50e6b345942951b68eac0e184ea025f2ae4/default.nix#L121-133>code</a>.
+
+### Let expressions
+Now, you will need to write Nix's <a href=https://nixos.org/guides/nix-pills/basics-of-language.html>let expressions</a> to run your workflow. Where you can define all the required sample files, and also pipeline of the workflow. Here is a simplified example workflow written in default.nix in BioNix:
+```
+{ bionix ? import< <bionix { } }:
+
+with bionix;
+with lib;
+
+let
+  # fetch an ecoli sample FastA file using fetchFastA rather than fetchurl
+  ecoli = fetchFastA {
+    url = "https://github.com/WEHIGenomicsRnD/qc-pipe/raw/main/.test/data/GCF_013166975.1_ASM1316697v1_genomic.fna";
+    sha256 = "0rcph75mczwsn6q7aqcpdpj75vjd9v2insmhnf8dmcyyldz25dqi";
+  };
+in
+exampleSoftware.tool { } ecoli
+```
+
+## nix flake
+As mentioned earlier, configuration was made to enable Nix's experimental feature of using flakes. This Nix's feature is one of the significant feature for BioNix, which contributes to guaranteeing reproducibility within a workflow. There are a couple of useful subcommands, where I will mention a few, you can check out <a href=https://nixos.org/manual/nix/stable/command-ref/new-cli/nix3-flake.html>manual</a> for more.  
+`nix flake init` - creates a template flake in your current directory (an alternate template specific to BioNix framework will be shown later)  
+`nix flake show` - shows you the outputs of a flake (may be quite useful IMO)
+
+## flake.nix
+Flake is also important for reproducibility as it keeps track of all versions of the dependencies when a build is executed. If you have a `flake.nix` file in your directory, when you first run `nix build`, it will generate a `flake.lock` file. With the lock file, building the same directory in different machines guarantees high reproducibility of the same output in the future, as flake.lock contains the records of all versions of packages used at the time of build. If you want to use the latest version of certain packages imported via your flake, where the `flake.lock` was generated a while ago and the package versions were not specified, you can run `nix build --recreate-lock-file` when building the derivation.  
+
+### Template
+For BioNix, here is an example `flake.nix` template that I suggest which utilises flake utility functions by <a href=https://github.com/numtide/flake-utils>numtide/flake-utils</a>. Also, check out <a href=https://nixos.org/manual/nix/stable/command-ref/new-cli/nix3-flake.html#flake-format>manual</a> for descriptions of each attributes and the format of `flake.nix`. Note there are many alternate packages developed to enhance flakes other than numtide/flake-utils.
+```
+{
+  description = "Flake for yourSoftware";
+
+  inputs = {
+    bionix.url = "github:papenfusslab/bionix";
+    nixpkgs.url = "github:nixos/nixpkgs";
+    flake-utils.url = "github:numtide/flake-utils";
+  };
+
+  outputs = { self, nixpkgs, bionix, flake-utils }:
+    flake-utils.lib.eachDefaultSystem
+      (system: with bionix.lib
+        {
+          overlays = [ (self: super: { software = self.callBionix ./software.nix { }; }) ];
+          nixpkgs = import nixpkgs { inherit system; };
+        };
+      {
+        defaultPackage = callBionix ./. { };
+      }
+      );
+}
+```
+For this example, the versions of the `inputs` were not specified, hence `nix build` takes the latest versions and running the build at different times may not reproduce the outcome. This is where the `flake.lock` file comes into play.
+
+### overlays
+Here, take note on the line `overlays = [ (self: super: { software = self.callBionix ./software.nix { }; }) ];`, we are using `overlays` to include new files for wrapping a new software. For instance, you can make a new directory, and include the `overlays` in your flake.nix so that you can call the wrapped software in your workflow(default.nix) through BioNix, i.e. bionix.fastqc.   
+In other words, without overlays, if you want to call the tools through BioNix in your workflow, you would have to clone the directory and the wrapper files would need to be palced in the bionix/tools directory. Moreover, when specifying the BioNix in `inputs` for your flake, you would now need to specify it to your development/cloned directory with the new files, as the example above refers to the online repository. However, this method may introduce complexity such as during version control, i.e. when making pull requests. Thus, it is recommended to use overlay to make wrapping software and testing easier.
+
+## Wrapping Software
+Now that we have some basics about workflow and flakes, we can move on to the process of wrapping new software to make it available in bionix. 
+
+## Stage
+ As mentioned in the BioNix's article, stages in a BioNix workflow specifies the entire computation environment. It tracks dependencies down to kernel level and the stage is executed in its own sandbox, which is one of the main factors to guaranteeing reproducibility. 
+
+## Derivations
+`derivation` is one of the most built-in function from Nix, it describes a build action. However, we will look at `stdenv.mkDerivation` because most packages uses `mkDerivation` as the base wrapper rather than basic `derivation` to package software and it also pulls in all the `stdenv` toolchain and basic tools needed to compile packages. It takes a set of attributes that defines the input of a build, where compulsory attributes are `name`, `buildInputs`, etc. and optional attributes such as `outputs`. Below is an example code for building a derivation (details to package a software).
+
+### Example BioNix Derivation
+```
+{ bionix, fetchurl, stdenv }:
+
+with bionix;
+
+stdenv.mkDerivation rec {
+  name = "foo-software-${version}";
+  version = "1.0";
+  src = fetchurl {
+    url = "https://example.com.tar.gz";
+    sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+  };
+  buildInputs = with pkgs; [ unzip ];
+}
+```
+This derivation creates an environment for a software package, and can be used as inputs to other derivations. Note that software versions for the derivations need to be specified and any hashes need to match in order to reproduce the same derivation path.
+
+### stdenv Phases
+
+
+## Specifying Stage
+
+### Example stage in BioNix
+```
+{ bionix 
+, ref
+}:
+
+{ input1
+, input2
+}:
+
+with bionix;
+
+stage {
+  name = "foo";
+  buildInputs = [];
+  outputs = [];
+  buildCommand = ''
+    echo hello world > $out
+  '';
+}
+```
+
+
+## BioNix Framework
+
+### pipe
+
+## Debugging/Testing
+
+### nix shell
+
+### nix develop
