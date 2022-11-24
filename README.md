@@ -110,7 +110,7 @@ There are some specific file types that are common in bioninformatics. There alr
 ### Let expressions
 Now, you will need to write Nix's <a href=https://nixos.org/guides/nix-pills/basics-of-language.html>let expressions</a> to run your workflow. Where you can define all the required sample files, and also pipeline of the workflow. Here is a simplified example workflow written in default.nix in BioNix:
 ```
-{ bionix ? import< <bionix { } }:
+{ bionix ? import <bionix> { } }:
 
 with bionix;
 with lib;
