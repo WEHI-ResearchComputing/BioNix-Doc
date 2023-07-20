@@ -6,16 +6,6 @@ Suggestions and useful resources to BioNix and Snakemake will be detailed below 
 For context, here is a description of my <a href="https://wehi-researchcomputing.github.io/gsoc">project's</a> scope.
 Note for students: dev work is preferred to be done on your local machine unless you need to run big datasets which may require HPC, i.e. via SLURM.
 
-## Resources Directory
-
-Below are a list of other helpful BioNix resources and their recommended usage. They are listed in a recommended order someone new to BioNix can go through them.
-
-| Link | Recommended Usage |
-|------|-------------------|
-|[BioNix Onboarding](./resources/BioNix_Onboarding.pdf)| 'What is Bionix?' 'How does it work?' and 'Glossary' help get a fundamental overview of BioNix (Note: Has links to helpful resources for VirusBreakEnd, but don't worry about this unless you are working on that part of the project.) |
-| [BioNix-GettingStarted-Milton](https://github.com/WEHI-ResearchComputing/BioNix-GettingStarted-Milton) | As a guide to set up BioNix on Milton/Nectar |
-| [BioNix Nectar HelpDoc](./resources/BioNix_Nectar_HelpDoc.md)| A more comprehensive guide on setting up Nectar/setting up BioNix on Nectar |
-
 ## BioNix
 <a href="https://github.com/PapenfussLab/bionix">BioNix</a> provides computational reproducibility, where it unifies workflow engines, package managers, and containers. It is implemented as a library on top of <a href="https://nixos.org/">Nix</a> and does not require any other dependencies.
 
