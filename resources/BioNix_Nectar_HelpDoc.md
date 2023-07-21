@@ -22,11 +22,11 @@ This section will talk about how to set your new Nectar account up and launch yo
     - **Part 2: Terminal and ssh**
         - Run the terminal commands on your command line as usual
         - The SSH command for basic connection/logging in to the VM is in the format `ssh image_Linux_Distribution@IP_address`
-            
-            You can check these details at the the Instances section of the Dashboard. Example:
-            ![](https://hackmd.io/_uploads/HJWPGQnY3.png)
 
-            The SSH command for this would be `ssh ubuntu@203.101.225.85`
+            You can check these details at the the Instances section of the Dashboard. Example:
+            ![](./md_imgs/nectar_1.jpeg)
+
+            The SSH command to log in would be `ssh ubuntu@111.111.111.11`
             
     - **Part 3: Setting a password to access your instance**
         - Set the password on your computer’s command line as a continuation from part 2, ***not*** on the web VNC console
