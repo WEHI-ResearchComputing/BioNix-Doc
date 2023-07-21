@@ -1,10 +1,10 @@
-## Contents
+# Contents
 
-[1. Setting up Nectar: Launching a Virtual Machine](##1-setting-up-nectar-launching-a-virtual-machine)
+[1. Setting up Nectar: Launching a Virtual Machine](#1-setting-up-nectar-launching-a-virtual-machine)
 
-[2. Setting up Nix on Nectar](##2-setting-up-nix-on-nectar)
+[2. Setting up Nix on Nectar](#2-setting-up-nix-on-nectar)
 
-## 1. Setting up Nectar: Launching a Virtual Machine
+# 1. Setting up Nectar: Launching a Virtual Machine
 
 This section will talk about how to set your new Nectar account up and launch your first virtual machine (VM). Go through the Nectar tutorials hyperlinked in each main step. The bullet notes are only to help out if you get confused at some sections.
 
@@ -31,7 +31,7 @@ This section will talk about how to set your new Nectar account up and launch yo
     - **Part 3: Setting a password to access your instance**
         - Set the password on your computer’s command line as a continuation from part 2, ***not*** on the web VNC console
 
-## 2. Setting up Nix on Nectar
+# 2. Setting up Nix on Nectar
 
 1. Login to Nectar VM on your command line
 2. Install Nix on the VM with the command `curl -L https://nixos.org/nix/install | sh`
