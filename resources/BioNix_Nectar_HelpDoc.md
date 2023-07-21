@@ -1,8 +1,8 @@
 ## Contents
 
-[1. Setting up Nectar: Launching a Virtual Machine](##1-Setting-up-Nectar-Launching-a-Virtual-Machine)
+[1. Setting up Nectar: Launching a Virtual Machine](##1-setting-up-nectar-launching-a-virtual-machine)
 
-[2. Setting up Nix on Nectar](##2-Setting-up-Nix-on-Nectar)
+[2. Setting up Nix on Nectar](##2-setting-up-nix-on-nectar)
 
 ## 1. Setting up Nectar: Launching a Virtual Machine
 
